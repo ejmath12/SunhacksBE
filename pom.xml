@@ -23,7 +23,9 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <start-class>controllers.MainClass</start-class>
     </properties>
+    
 
     <build>
         <plugins>
