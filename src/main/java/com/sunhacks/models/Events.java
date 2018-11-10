@@ -1,7 +1,13 @@
-package models;
+package com.sunhacks.models;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "events")
 public class Events {
-	private String name,description, latitude, longitude, place; 
+	@Id
+	private String name;
+	private String description, latitude, longitude, place;
 	private int event_strt_time, travelling_time=0;
 	public String getName() {
 		return name;
@@ -44,5 +50,18 @@ public class Events {
 	}
 	public void setTravelling_time(int travelling_time) {
 		this.travelling_time = travelling_time;
+	}
+
+	@Override
+	public String toString() {
+		return "Events{" +
+				"name='" + name + '\'' +
+				", description='" + description + '\'' +
+				", latitude='" + latitude + '\'' +
+				", longitude='" + longitude + '\'' +
+				", place='" + place + '\'' +
+				", event_strt_time=" + event_strt_time +
+				", travelling_time=" + travelling_time +
+				'}';
 	}
 }
