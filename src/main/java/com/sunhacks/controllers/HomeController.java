@@ -28,7 +28,7 @@ public class HomeController {
         Events e = new Events();
         e.setName("Sunhacks");
         e.setDescription("Hacktathon");
-        e.setEvent_strt_time(1232312);
+//        e.setEvent_strt_time(1232312);
         repository.save(e);
         StringBuilder sb = new StringBuilder("");
         for(Events events:repository.findAll()) {
@@ -48,13 +48,35 @@ public class HomeController {
     	  = restTemplate.getForEntity(fooResourceUrl, String.class);
     	JsonNode root = mapper.readTree(response.getBody());
     	JsonNode name = root.path("_embedded").path("events");
-    	List<String> ret = new ArrayList<>();
+    	List<Events> ret = new ArrayList<>();
     	if (name.isArray()) {
     	    for (final JsonNode objNode : name) {
-//    	    	Events event = new Events();
-//    	    	event.setName(objNode.get("name").toString());
+    	    	if(objNode.path("sales").path("public").get("startDateTime") == null) {
+    	    		continue;
+    	    	}
+    	    	Events event = new Events();
+    	    	event.setName(objNode.get("name").toString());
 //    	    	event.setDescription();
-    	    	ret.add(objNode.get("name").toString());
+//    	    	JsonNode venues = objNode.path("_embedded").path("venues").;
+    	    	
+    	    	event.setLatitude(objNode.path("_embedded").path("venues").get(0).path("location").get("latitude").toString());
+    	    	event.setLongitude(objNode.path("_embedded").path("venues").get(0).path("location").get("longitude").toString());
+//    	    	event.setDescription("Price - " + "min : " + objNode.path("priceRanges").get("min").toString() + " max : " + objNode.path("priceRanges").get("max").toString());
+//    	    	System.out.println(objNode.get("priceRanges") == null);
+    	    	if(objNode.get("priceRanges") == null) {
+    	    		event.setDescription(" ");
+    	    	}else {
+//    	    		System.out.println("Price - " + "min : " + objNode.path("priceRanges").get(0).get("min").toString() + " max : " + objNode.path("priceRanges").get(0).get("max").toString());
+    	    		event.setDescription("Price - " + "min : " + objNode.path("priceRanges").get(0).get("min").toString() + " max : " + objNode.path("priceRanges").get(0).get("max").toString());
+    	    	}
+    	    	
+    	    	event.setPlace(objNode.path("_embedded").path("venues").get(0).get("name").toString());
+//    	    	System.out.println(objNode.path("sales").path("public").toString());
+
+	    		event.setEvent_strt_time(objNode.path("sales").path("public").get("startDateTime").toString());
+    	    	
+//    	    	ret.add(objNode.get("name").toString());
+    	    	ret.add(event);
 //    	        System.out.println(objNode.get("name"));
     	    }
     	}

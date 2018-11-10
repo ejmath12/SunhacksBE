@@ -8,7 +8,8 @@ public class Events {
 	@Id
 	private String name;
 	private String description, latitude, longitude, place;
-	private int event_strt_time, travelling_time=0;
+	private int travelling_time=0;
+	private String event_strt_time;
 	public String getName() {
 		return name;
 	}
@@ -39,10 +40,10 @@ public class Events {
 	public void setPlace(String place) {
 		this.place = place;
 	}
-	public int getEvent_strt_time() {
+	public String getEvent_strt_time() {
 		return event_strt_time;
 	}
-	public void setEvent_strt_time(int event_strt_time) {
+	public void setEvent_strt_time(String event_strt_time) {
 		this.event_strt_time = event_strt_time;
 	}
 	public int getTravelling_time() {
