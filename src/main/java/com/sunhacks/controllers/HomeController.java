@@ -78,12 +78,12 @@ public class HomeController {
 		System.out.println("POST Request" + request);
 		
 //		boolean rightNow = true; // default should be false
-		String requestLocation = "default"; // default value is "default"
+		String requestLocation = "Texas"; // default value is "default"
 		String requestLatitude = null;
 		String requestLongitude = null;
 		String searchRadius = "10";
 //		long requestDateTime = -1;
-		int noOfDays = 0; // default value is -1"43.874668","-81.484383"
+		int noOfDays = 10; // default value is -1"43.874668","-81.484383"
 		int noOfHours = 0;
 		
 		RestTemplate restTemplate = new RestTemplate();
@@ -92,8 +92,7 @@ public class HomeController {
 		JsonNode root = mapper.readTree(request);
 		
 		noOfHours = root.get(0).get("value").asInt();
-		requestLatitude = root.get(1).get("value").asText();
-		requestLongitude = root.get(2).get("value").asText();
+
 		
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		String startDate = null;
@@ -101,16 +100,27 @@ public class HomeController {
 		
 		long systemTime = System.currentTimeMillis();
 
-		if((!(requestLocation.equals("default"))) && noOfDays != 0) {
+		if(requestLocation != null && noOfDays != 0) {
 			Timestamp timestamp = new Timestamp(systemTime);
 			startDate = simpleDateFormat.format(timestamp);
 			timestamp = new Timestamp(systemTime + noOfDays * 24 * 3600 * 1000 - noOfHours * 3600 * 1000);
 			endDate = simpleDateFormat.format(timestamp);
-		}else {
+			
+			String geocode_api_request="https://maps.googleapis.com/maps/api/geocode/json?address="+requestLocation+"&key=AIzaSyAq9QsLNB4AcqvPmLgVhR22CIAznd2Y3uM";
+            ResponseEntity<String> response = restTemplate.getForEntity(geocode_api_request, String.class);
+            JsonNode geocode_root = mapper.readTree(response.getBody());
+            requestLatitude = geocode_root.path("results").get(0).path("geometry").path("location").get("lat").asText();
+            requestLongitude = geocode_root.path("results").get(0).path("geometry").path("location").get("lng").asText();
+            System.out.println(requestLatitude + " " + requestLongitude);
+		}
+		else {
 			Timestamp timestamp = new Timestamp(systemTime);
 			startDate = simpleDateFormat.format(timestamp);
 			timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
 			endDate = simpleDateFormat.format(timestamp);
+			
+			requestLatitude = root.get(1).get("value").asText();
+			requestLongitude = root.get(2).get("value").asText();
 		}
 		
 		String discoveryApi = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=" + requestLatitude + "," + requestLongitude + "&radius=" + searchRadius + "&startDateTime=" + startDate + "&endDateTime=" + endDate + "&apikey=MUoKA8DyO4d1TsiK8TDreOQG1tIOHbHD";
@@ -152,7 +162,7 @@ public class HomeController {
 		
 		List<Event> feasibleEvents;
 
-		if ((!(requestLocation.equals("default"))) && noOfDays != 0) {
+		if (requestLocation != null && noOfDays != 0) {
 			System.out.println("planned");
 			feasibleEvents = generateFeasibleEvents(eventList, requestLocation, noOfHours, noOfDays);
 		} else {
@@ -191,7 +201,7 @@ public class HomeController {
 		ResponseEntity<String> response = restTemplate.getForEntity(requests, String.class);
 
 		JsonNode root = mapper.readTree(response.getBody());
-		JsonNode destinations = root.path("rows").get(0).path("elements");
+		JsonNode destinations = root.path("rows").get(0).path("elements"); // TODO Check null error
 
 		List<Event> feasibleEvents = new ArrayList<Event>();
 
