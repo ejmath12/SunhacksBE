@@ -7,7 +7,12 @@ import com.sunhacks.models.Events;
 import com.sunhacks.repository.EventRepository;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +42,6 @@ public class HomeController {
         return sb.toString();
     }
 
-
-
 	@RequestMapping(value = "/historyevents")
 	public String getHistoryEvents() {
 		ObjectMapper mapper = new ObjectMapper();
@@ -66,9 +69,8 @@ public class HomeController {
 		}
 	}
 
-
 	@RequestMapping(value = "/events")
-  	public String getEvents() throws JsonProcessingException, IOException
+  public List<Events> getEvents() throws JsonProcessingException, IOException, ParseException
   {
 	  	RestTemplate restTemplate = new RestTemplate();
     	ObjectMapper mapper = new ObjectMapper();
@@ -85,35 +87,78 @@ public class HomeController {
     	    		continue;
     	    	}
     	    	Events event = new Events();
-    	    	event.setName(objNode.get("name").toString());
+    	    	event.setName(objNode.get("name").asText());
 //    	    	event.setDescription();
 //    	    	JsonNode venues = objNode.path("_embedded").path("venues").;
     	    	
-    	    	event.setLatitude(objNode.path("_embedded").path("venues").get(0).path("location").get("latitude").toString());
-    	    	event.setLongitude(objNode.path("_embedded").path("venues").get(0).path("location").get("longitude").toString());
-//    	    	event.setDescription("Price - " + "min : " + objNode.path("priceRanges").get("min").toString() + " max : " + objNode.path("priceRanges").get("max").toString());
+    	    	event.setLatitude(objNode.path("_embedded").path("venues").get(0).path("location").get("latitude").asText());
+    	    	event.setLongitude(objNode.path("_embedded").path("venues").get(0).path("location").get("longitude").asText());
+//    	    	event.setDescription("Price - " + "min : " + objNode.path("priceRanges").get("min").asText() + " max : " + objNode.path("priceRanges").get("max").asText());
 //    	    	System.out.println(objNode.get("priceRanges") == null);
     	    	if(objNode.get("priceRanges") == null) {
     	    		event.setDescription(" ");
     	    	}else {
-//    	    		System.out.println("Price - " + "min : " + objNode.path("priceRanges").get(0).get("min").toString() + " max : " + objNode.path("priceRanges").get(0).get("max").toString());
-    	    		event.setDescription("Price - " + "min : " + objNode.path("priceRanges").get(0).get("min").toString() + " max : " + objNode.path("priceRanges").get(0).get("max").toString());
+//    	    		System.out.println("Price - " + "min : " + objNode.path("priceRanges").get(0).get("min").asText() + " max : " + objNode.path("priceRanges").get(0).get("max").asText());
+    	    		event.setDescription("Price - " + "min : " + objNode.path("priceRanges").get(0).get("min").asText() + " max : " + objNode.path("priceRanges").get(0).get("max").asText());
     	    	}
     	    	
-    	    	event.setPlace(objNode.path("_embedded").path("venues").get(0).get("name").toString());
-//    	    	System.out.println(objNode.path("sales").path("public").toString());
-
-	    		event.setEvent_strt_time(objNode.path("sales").path("public").get("startDateTime").toString());
+    	    	event.setPlace(objNode.path("_embedded").path("venues").get(0).get("name").asText());
+//    	    	System.out.println(objNode.path("sales").path("public").asText());
     	    	
-//    	    	ret.add(objNode.get("name").toString());
+    	    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                Date dt = sdf.parse(objNode.path("sales").path("public").get("startDateTime").asText());
+                long epoch = dt.getTime();
+                event.setEvent_strt_time(epoch/ 1000);
+    	         
+//    	    	ret.add(objNode.get("name").asText());
     	    	ret.add(event);
 //    	        System.out.println(objNode.get("name"));
     	    }
     	}
-    	
-    	
-    	
 //        Quote quote = restTemplate.getForObject("http://gturnquist-quoters.cfapps.io/api/random", Quote.class);
-        return ret.toString();
+    	
+    	return generate_feasiable_event(ret,"43.874668","-81.484383");
   }
+  
+  public List<Events> generate_feasiable_event(List<Events> event_list, String origin_latitude, String origin_longitude) throws JsonProcessingException, IOException //,long user_strt_time
+	{
+		String requests="https://maps.googleapis.com/maps/api/distancematrix/json?origins="+origin_latitude+","+origin_longitude;
+		RestTemplate restTemplate = new RestTemplate();
+		ObjectMapper mapper = new ObjectMapper();
+		
+		
+		requests+="&destinations=";
+		
+		for(int i=0;i<event_list.size();i++)
+		{
+			requests+=Float.parseFloat(event_list.get(i).getLatitude())+","+Float.parseFloat(event_list.get(i).getLongitude())+"|";
+		}
+		requests=requests.substring(0,requests.length()-1);
+		requests+="&key=AIzaSyAq9QsLNB4AcqvPmLgVhR22CIAznd2Y3uM";
+		
+		System.out.println(requests);
+		
+		ResponseEntity<String> response= restTemplate.getForEntity(requests, String.class);
+		
+		JsonNode root = mapper.readTree(response.getBody());
+	  	JsonNode destinations = root.path("rows").get(0).path("elements"); 	
+	  	
+	  	List<Events> events_fea_list=new ArrayList<Events>();
+	  	
+	  	int i=0;
+	  	for (final JsonNode objNode : destinations)
+	  	{
+	  		long time_taken = Long.parseLong(objNode.path("duration").get("value").asText());
+	  		long timestamp = System.currentTimeMillis() / 1000;
+	  		
+	  		System.out.println((time_taken + timestamp) + " " + event_list.get(i).getEvent_strt_time());
+	  		
+	  		if (time_taken+timestamp>event_list.get(i).getEvent_strt_time())// && event_list.get(i).getEvent_strt_time()>user_strt_time)
+	  		{
+	  			events_fea_list.add(event_list.get(i));
+	  		}
+	  		i++;
+	  	}		
+		return events_fea_list;
+	}
 }
