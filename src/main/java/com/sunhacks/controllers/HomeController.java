@@ -14,11 +14,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -73,8 +75,9 @@ public class HomeController {
 
 	@RequestMapping(value = "/getEvents", method = RequestMethod.POST,
 			consumes = "application/json", produces = "application/json")
-  public String getEvents() throws JsonProcessingException, IOException, ParseException
+  public String getEvents(@RequestBody String request) throws JsonProcessingException, IOException, ParseException
   {
+	    System.out.println("Request" + request);
 	  	RestTemplate restTemplate = new RestTemplate();
     	ObjectMapper mapper = new ObjectMapper();
     	
@@ -169,6 +172,6 @@ public class HomeController {
 	  		}
 	  		i++;
 	  	}		
-		return events_fea_list;
+		return events_fea_list.subList(0, Math.min(events_fea_list.size(),5));
 	}
 }
