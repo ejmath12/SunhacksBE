@@ -2,12 +2,23 @@
 <html><head>
     <script type="text/javascript" src="js/jquery-2.1.1.js"></script>
     <script type="text/javascript" src="bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/moment.js"></script>
+    <script type="text/javascript" src="bootstrap-3.3.7/js/bootstrap-datepicker.min.js"></script>
     <script type="text/javascript" src="js/isometric/main.js"></script>
 
     <script type="text/babel">
         $( document ).ready(function() {
             startpage();
+
+
+
+            function showPosition(position) {
+                document.getElementById('lat').value=position.coords.latitude;
+                document.getElementById('long').value=position.coords.longitude;
+            }
             function startpage() {
+                $("#location").show();
+                $("#hide-location").html("Detect Location");
                 $('#root').html('');
                 $('#home').html('');
                 var HomeTable = React.createClass({
@@ -18,13 +29,18 @@
                                     <div className="row">
                                         <div className="col-md-12">
                                             <div className="header-content text-left">
+                                                <form id="homeform">
                                                 <h1 className="margin-auto">Time is precious!<br></br>Make the most of
                                                     it</h1>
-                                                <br></br><br></br>
-                                                <h4>How much time do you want us plan?</h4>
-                                                <div>
-
-                                                    <form id="homeform" class="homeform">
+                                                    <br></br><br></br>
+                                                    <h4 >Location?(required)</h4>
+                                                    <input type="text" name="location" id ="location"
+                                                           placeholder="Location"/><br></br><a href="#" id="hide-location">Detect Location</a><br></br><br></br>
+                                                    <br></br><br></br>
+                                                    <h4>For how many days do you want us to check?(leave blank if its just for today)</h4>
+                                                    <input type="text" name="days"
+                                                           placeholder="In Days"/><br></br><br></br><br></br>
+                                                    <h4>How many hours are you willing to spend?(required)</h4>
                                                         <input type="text" name="hours"
                                                                placeholder="In Hours"/><br></br><br></br><br></br>
                                                         <input type="hidden" name="lat" id="lat"/>
@@ -36,7 +52,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
                         );
                     }
                 });
@@ -44,8 +59,27 @@
                 ReactDOM.render(
                     <HomeTable/>, document.getElementById('home')
                 );
+                $(function () {
+                    $('#datetimepicker1').datetimepicker();
+                });
+                $("#hide-location").click(function(event) {
+                    $("#location").hide();
+                    $("#hide-location").html("Location Detected!");
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(showPosition);
+                    } else {
+                        x.innerHTML = "Geolocation is not supported by this browser.";
+                    }
+                });
+                $("#btn-search").click(function(event) {
+
+                    //stop submit the form, we will post it manually.
+                    event.preventDefault();
+
+                    fire_ajax_submit();
+
+                });
             }
-            getLocation();
 
             $("#start-button").click(function(event) {
                 $("#my_li").removeClass("active");
@@ -64,14 +98,7 @@
                 fire_ajax_submit2();
 
             });
-                $("#btn-search").click(function(event) {
 
-                    //stop submit the form, we will post it manually.
-                event.preventDefault();
-
-                fire_ajax_submit();
-
-            });
         });
 
         function fire_ajax_submit2() {
@@ -86,16 +113,23 @@
                 cache: false,
                 timeout: 600000,
                 success: function (data) {
-                    console.log("debug")
+                    console.log("debug"+ data);
                     $('#home').html('');
                     var EMPLOYEES1 = data;
                     var Employee1 = React.createClass({
+                        onTodoChange(value)
+                        {
+                            this.setState({
+                                name: value
+                            });
+                        },
                         render: function() {
+
                             return (
                                 <tr>
                                     <td>{this.props.employee.eventName}</td>
                                     <td>  <label>
-                                        <input type="text" name="rating" value={this.props.employee.eventRating}/>
+                                        <input type="text" className="events-ratings" value={this.props.employee.eventRating}/>
                                     </label></td>
                                 </tr>);
                         }
@@ -131,6 +165,45 @@
                     ReactDOM.render(
                         <EmployeeTable1 employees ={EMPLOYEES1}/>, document.getElementById('root')
                     );
+
+                    $("#btn-changerat").click(function(event) {
+                        //stop submit the form, we will post it manually.
+                        event.preventDefault();
+                        fire_ajax_submit3();
+                    });
+                },
+                error: function (e) {
+
+                    var json = "<h4>Ajax Response</h4><pre>"
+                        + e.responseText + "</pre>";
+                    $('#result').html(json);
+
+                    console.log("ERROR : ", e);
+                    $("#btn-search").prop("disabled", false);
+
+                }
+            });
+
+        }
+        function fire_ajax_submit3() {
+            console.log("hi");
+            var ratingsArray = $('.ratingsInput').map(function() {
+                return '"name":"'+this.name +',"rating":"' + this.value + '"';
+            }).get();
+            console.log("Data" + ratingsArray)
+            $("#btn-search").prop("disabled", true);
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/saveRatings",
+                data: ratingsArray,
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+                    console.log("hi");
+                    fire_ajax_submit2();
                 },
                 error: function (e) {
 
@@ -181,6 +254,7 @@
         function fire_ajax_submit() {
 
             const data =  $("#homeform").serializeArray();
+            console.log("Data" + data);
 
             $("#btn-search").prop("disabled", true);
 
@@ -202,7 +276,7 @@
                             return (
                                 <tr>
                                     <td>{this.props.employee.eventName}</td>
-                                    <td><a href={this.props.employee.eventLink}>{this.props.employee.eventLink}</a></td>
+                                    <td><a href={this.props.employee.eventLink}>Details</a></td>
                                     <td>{this.props.employee.eventPlace}</td>
 									<td>{this.props.employee.travellingTimeInString}</td>
                                     <td>{this.props.employee.eventStartTime}</td>
@@ -276,18 +350,7 @@
             });
 
         }
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition);
-            } else {
-                x.innerHTML = "Geolocation is not supported by this browser.";
-            }
-        }
 
-        function showPosition(position) {
-            document.getElementById('lat').value=position.coords.latitude;
-            document.getElementById('long').value=position.coords.longitude;
-        }
     </script>
     <meta charset="utf-8">
     <title>TimeUtopia</title>
@@ -296,6 +359,7 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="bootstrap-3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/pe-icon-7-stroke.css">
     <link rel="stylesheet" href="css/eden-responsive.css">

@@ -58,16 +58,19 @@ public class HomeController {
 		return jsonInString;
 	}
 
-	@RequestMapping(value = "/saveRatings")
-	public boolean saveRatings() {
+	@RequestMapping(value = "/saveRatings", method = RequestMethod.POST,
+			consumes = "application/json", produces = "application/json")
+	public boolean saveRatings(@RequestBody String request) throws IOException {
+		System.out.println("Request" + request);
 		ObjectMapper mapper = new ObjectMapper();
-		String id = "Sunhacks";
-		Event event = repository.findOne(id);
-		event.setEventRating(5);
+		JsonNode root = mapper.readTree(request);
+		Event e = new Event();
+		e.setEventName(root.get("name").textValue());
+		e.setEventRating(Integer.parseInt(root.get("rating").textValue()));
 		try {
-			repository.save(event);
+			repository.save(e);
 			return true;
-		} catch (Exception e) {
+		} catch (Exception ex) {
 			return false;
 		}
 	}
