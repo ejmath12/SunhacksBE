@@ -76,17 +76,24 @@ public class HomeController {
 	public String getEvents(@RequestBody String request) throws JsonProcessingException, IOException, ParseException {
 		
 		System.out.println("POST Request" + request);
+		
+//		boolean rightNow = true; // default should be false
+		String requestLocation = "default"; // default value is "default"
+		String requestLatitude = null;
+		String requestLongitude = null;
+		String searchRadius = "10";
+//		long requestDateTime = -1;
+		int noOfDays = 0; // default value is -1"43.874668","-81.484383"
+		int noOfHours = 0;
+		
 		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper mapper = new ObjectMapper();
 		
-//		boolean rightNow = true; // default should be false
-		String requestLocation = "Tempe"; // default value is "default"
-		String requestLatitude = "33.4255";
-		String requestLongitude = "-111.9400";
-		String searchRadius = "10";
-		long requestDateTime = -1;
-		int noOfDays = -1; // default value is -1"43.874668","-81.484383"
-		int noOfHours = 5;
+		JsonNode root = mapper.readTree(request);
+		
+		noOfHours = root.get(0).get("value").asInt();
+		requestLatitude = root.get(1).get("value").asText();
+		requestLongitude = root.get(2).get("value").asText();
 		
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		String startDate = null;
@@ -94,7 +101,7 @@ public class HomeController {
 		
 		long systemTime = System.currentTimeMillis();
 
-		if((!(requestLocation.equals("default"))) && noOfDays != -1 && requestDateTime != -1) {
+		if((!(requestLocation.equals("default"))) && noOfDays != 0) {
 			Timestamp timestamp = new Timestamp(systemTime);
 			startDate = simpleDateFormat.format(timestamp);
 			timestamp = new Timestamp(systemTime + noOfDays * 24 * 3600 * 1000 - noOfHours * 3600 * 1000);
@@ -106,10 +113,10 @@ public class HomeController {
 			endDate = simpleDateFormat.format(timestamp);
 		}
 		
-		String discoveryApi = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=" + requestLatitude + "," + requestLongitude + "&radius=" + searchRadius + "&startDateTime=" + startDate + "&endDateTime" + endDate + "&apikey=MUoKA8DyO4d1TsiK8TDreOQG1tIOHbHD";
+		String discoveryApi = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=" + requestLatitude + "," + requestLongitude + "&radius=" + searchRadius + "&startDateTime=" + startDate + "&endDateTime=" + endDate + "&apikey=MUoKA8DyO4d1TsiK8TDreOQG1tIOHbHD";
 		System.out.println(discoveryApi);
 		ResponseEntity<String> response = restTemplate.getForEntity(discoveryApi, String.class);
-		JsonNode root = mapper.readTree(response.getBody());
+		root = mapper.readTree(response.getBody());
 		JsonNode name = root.path("_embedded").path("events");
 
 		List<Event> eventList = new ArrayList<>();
@@ -145,7 +152,7 @@ public class HomeController {
 		
 		List<Event> feasibleEvents;
 
-		if ((!(requestLocation.equals("default"))) && noOfDays != -1 && requestDateTime != -1) {
+		if ((!(requestLocation.equals("default"))) && noOfDays != 0) {
 			System.out.println("planned");
 			feasibleEvents = generateFeasibleEvents(eventList, requestLocation, noOfHours, noOfDays);
 		} else {
@@ -203,7 +210,7 @@ public class HomeController {
 				
 				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				
-				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime());
+				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime() * 1000);
 				eventList.get(i).setEventStartTimeInString(simpleDateFormat.format(timestamp2));
 				eventList.get(i).setTravellingTimeInString(objNode.path("duration").get("text").asText());
 				feasibleEvents.add(eventList.get(i));
@@ -257,7 +264,7 @@ public class HomeController {
 				
 				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				
-				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime());
+				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime() * 1000);
 				eventList.get(i).setEventStartTimeInString(simpleDateFormat.format(timestamp2));
 				eventList.get(i).setTravellingTimeInString(objNode.path("duration").get("text").asText());
 				feasibleEvents.add(eventList.get(i));
