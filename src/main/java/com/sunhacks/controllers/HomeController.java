@@ -94,7 +94,9 @@ public class HomeController {
 		
 		JsonNode root = mapper.readTree(request);
 		
-		noOfHours = root.get(0).get("value").asInt();
+		requestLocation = root.get(0).get("value").asText();
+		noOfDays = root.get(1).get("value").asInt();
+		noOfHours = root.get(2).get("value").asInt();
 
 		
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -122,8 +124,8 @@ public class HomeController {
 			timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
 			endDate = simpleDateFormat.format(timestamp);
 			
-			requestLatitude = root.get(1).get("value").asText();
-			requestLongitude = root.get(2).get("value").asText();
+			requestLatitude = root.get(3).get("value").asText();
+			requestLongitude = root.get(4).get("value").asText();
 		}
 		
 		String discoveryApi = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=" + requestLatitude + "," + requestLongitude + "&radius=" + searchRadius + "&startDateTime=" + startDate + "&endDateTime=" + endDate + "&apikey=MUoKA8DyO4d1TsiK8TDreOQG1tIOHbHD";
