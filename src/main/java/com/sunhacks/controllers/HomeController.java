@@ -32,17 +32,15 @@ public class HomeController {
     private EventRepository repository;
 
 	@RequestMapping(value = "/saveEvent", method = RequestMethod.POST,
-			consumes = "application/json", produces = "application/json")    public String index() {
-        Events e = new Events();
-        e.setName("Sunhacks");
-        e.setDescription("Hacktathon");
-//        e.setEvent_strt_time(1232312);
-        repository.save(e);
-        StringBuilder sb = new StringBuilder("");
-        for(Events events:repository.findAll()) {
-            sb.append(events.toString());
-        }
-        return sb.toString();
+			consumes = "application/json", produces = "application/json")
+	public String index(@RequestBody String request) throws IOException {
+		System.out.println(request);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode root = mapper.readTree(request);
+		Events e = new Events();
+		e.setName(root.get("name").textValue());
+		repository.save(e);
+		return "{}";
     }
 
 	@RequestMapping(value = "/historyEvents", method = RequestMethod.POST,
@@ -161,7 +159,7 @@ public class HomeController {
 	  	int i=0;
 	  	for (final JsonNode objNode : destinations)
 	  	{
-	  		long time_taken = Long.parseLong(objNode.path("duration").get("value").asText());
+	  		long time_taken = 1;
 	  		long timestamp = System.currentTimeMillis() / 1000;
 	  		
 	  		System.out.println((time_taken + timestamp) + " " + event_list.get(i).getEvent_strt_time());

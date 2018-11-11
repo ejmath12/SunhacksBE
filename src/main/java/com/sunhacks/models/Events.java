@@ -15,7 +15,7 @@ public class Events {
 	@Id
 	private String name;
 	private String description, latitude, longitude, place;
-	private int rating;
+	private int rating =0;
 	private int travelling_time=0;
 	private long event_strt_time;
 	public String getName() {

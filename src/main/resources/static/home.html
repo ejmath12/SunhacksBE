@@ -6,7 +6,64 @@
 
     <script type="text/babel">
         $( document ).ready(function() {
+            startpage();
+            function startpage() {
+                $('#root').html('');
+                $('#home').html('');
+                var HomeTable = React.createClass({
+                    render: function () {
+                        return (
+                            <div className="intro">
+                                <div className="container">
+                                    <div className="row">
+                                        <div className="col-md-12">
+                                            <div className="header-content text-left">
+                                                <h1 className="margin-auto">Time is precious!<br></br>Make the most of
+                                                    it</h1>
+                                                <br></br><br></br>
+                                                <h4>How much time do you want us plan?</h4>
+                                                <div>
+
+                                                    <form id="homeform" class="homeform">
+                                                        <input type="text" name="hours"
+                                                               placeholder="In Hours"/><br></br><br></br><br></br>
+                                                        <input type="hidden" name="lat" id="lat"/>
+                                                        <input type="hidden" name="long" id="long"/>
+                                                    </form>
+                                                </div>
+                                                <a href="#" className="btn btn-info button" id="btn-search">Get Events</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+                });
+
+                ReactDOM.render(
+                    <HomeTable/>, document.getElementById('home')
+                );
+            }
             getLocation();
+
+            $("#start-button").click(function(event) {
+                $("#my_li").removeClass("active");
+                $("#start_li").addClass("active");
+                //stop submit the form, we will post it manually.
+                event.preventDefault();
+
+                startpage();
+
+            });
+
+            $("#my-history-button").click(function(event) {
+                //stop submit the form, we will post it manually.
+                event.preventDefault();
+
+                fire_ajax_submit2();
+
+            });
                 $("#btn-search").click(function(event) {
 
                     //stop submit the form, we will post it manually.
@@ -16,6 +73,111 @@
 
             });
         });
+
+        function fire_ajax_submit2() {
+            $("#start_li").removeClass("active");
+            $("#my_li").addClass("active");
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/historyEvents",
+                data: {},
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+                    console.log("debug")
+                    $('#home').html('');
+                    var EMPLOYEES1 = data;
+                    var Employee1 = React.createClass({
+                        render: function() {
+                            return (
+                                <tr>
+                                    <td>{this.props.employee.name}</td>
+                                    <td>  <label>
+                                        <input type="text" name="rating" value={this.props.employee.rating}/>
+                                    </label></td>
+                                </tr>);
+                        }
+                    });
+                    var EmployeeTable1 = React.createClass({
+                        render: function() {
+                            var rows = [];
+                            this.props.employees.map(function(employee) {
+                                rows.push(<Employee1 employee={employee} />);
+                            });
+                            return (
+                                <div className="container">
+                                    <div className="row">
+                                        <form>
+                                            <table className="table table-striped">
+                                                <thead>
+                                                <tr>
+                                                    <th>Event Name</th>
+                                                    <th>Rating</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>{rows}</tbody>
+                                            </table>
+                                            <a href="#" className="btn btn-info button" id = "btn-changerat">Change Rating!</a>
+                                        </form>
+                                    </div>
+                                </div>
+
+                            );
+                        }
+                    });
+
+                    ReactDOM.render(
+                        <EmployeeTable1 employees ={EMPLOYEES1}/>, document.getElementById('root')
+                    );
+                },
+                error: function (e) {
+
+                    var json = "<h4>Ajax Response</h4><pre>"
+                        + e.responseText + "</pre>";
+                    $('#result').html(json);
+
+                    console.log("ERROR : ", e);
+                    $("#btn-search").prop("disabled", false);
+
+                }
+            });
+
+        }
+
+            function fire_ajax_submit1() {
+                console.log("hi");
+            const data =  $("input[name=select]:checked").val();
+            var sendData = '{"name":"' +data +'"}';
+            console.log("Data" + sendData)
+            $("#btn-search").prop("disabled", true);
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/saveEvent",
+                data: sendData,
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+                    console.log("hi");
+                    fire_ajax_submit2();
+                },
+                error: function (e) {
+
+                    var json = "<h4>Ajax Response</h4><pre>"
+                        + e.responseText + "</pre>";
+                    $('#result').html(json);
+
+                    console.log("ERROR : ", e);
+                    $("#btn-search").prop("disabled", false);
+
+                }
+            });
+
+        }
         function fire_ajax_submit() {
 
             const data =  $("#homeform").serializeArray();
@@ -43,6 +205,9 @@
                                     <td>{this.props.employee.description}</td>
                                     <td>{this.props.employee.place}</td>
                                     <td>{this.props.employee.event_strt_time}</td>
+                                    <td>  <label>
+                                        <input type="radio" name="select" value={this.props.employee.name}/>
+                                    </label></td>
                                 </tr>);
                         }
                     });
@@ -53,6 +218,9 @@
                                 rows.push(<Employee employee={employee} />);
                             });
                             return (
+                                <div className="container">
+                                <div className="row">
+                                <form>
                                 <table className="table table-striped">
                                     <thead>
                                     <tr>
@@ -60,10 +228,22 @@
                                         <th>Event Link</th>
                                         <th>Place</th>
                                         <th>Event StartTime</th>
+                                        <th>
+                                            <label>
+                                                <i className={"fa fa-fw icon icon--kohana fa-check" }></i>
+                                                <span className="input__label-content input__label-content--kohana">Choose Me!</span>
+                                            </label>
+                                        </th>
                                     </tr>
                                     </thead>
                                     <tbody>{rows}</tbody>
-                                </table>);
+                                </table>
+                                </form>
+                                    <a href="#" className="btn btn-info button" id="btn-save">Go!</a>
+                                </div>
+                                </div>
+
+                            );
                         }
                     });
 
@@ -71,7 +251,12 @@
                         <EmployeeTable employees ={EMPLOYEES}/>, document.getElementById('root')
                     );
                     $('#result').html(json);
-
+                    $("#btn-save").click(function(event) {
+                        console.log("hi");
+                        //stop submit the form, we will post it manually.
+                        event.preventDefault();
+                        fire_ajax_submit1();
+                    });
                     console.log("SUCCESS : ", data);
                     $("#btn-search").prop("disabled", false);
 
@@ -126,6 +311,7 @@
 
     <!-- favicon -->
     <link rel="shortcut icon" href="images/eden-logo.png">
+    <script src="js/owl.carousel.js"></script>
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
     <!--[if lt IE 9]>
@@ -136,9 +322,6 @@
 <body>
 
 <div id="page" class="page">
-
-
-
     <nav role="navigation" class="navbar navbar-default">
         <div class="container">
             <div class="navbar-header">
@@ -153,37 +336,14 @@
 
             <div id="navbar-collapse-02" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
-                    <li class="active"><a href="#">Home</a></li>
-                    <li><a href="#">My Events History</a></li>
+                    <li class="active" id ="start_li"><a href="#" id = "start-button">Home</a></li>
+                    <li id ="my_li"><a href="#" id="my-history-button">My Events History</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="intro">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="header-content text-left">
-                        <h1 class="margin-auto">Time is precious!</br>Make the most of it</h1>
-                        <br><br>
-                        <h4>How much time do you want us plan?</h4>
-                        <div>
-
-                            <form id ="homeform" class="homeform">
-                                <input type="text" name="firstname" placeholder="In Hours"><br><br><br>
-                                <input type="hidden" name ="lat" id="lat">
-                                <input type="hidden" name ="long" id="long">
-                            </form>
-                        </div>
-
-                        <a href="#" class="btn btn-info button" id = "btn-search">Get Events</a>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
+    <div id='home'></div>
     <div id='root'></div>
 
     <script src="https://fb.me/react-15.0.1.js"></script>
