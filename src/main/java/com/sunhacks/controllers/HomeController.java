@@ -8,6 +8,8 @@ import com.sunhacks.models.Event;
 import com.sunhacks.models.EventShort;
 import com.sunhacks.repository.EventRepository;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
+
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -15,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -110,11 +113,19 @@ public class HomeController {
 		
 		long systemTime = System.currentTimeMillis();
 
-		if(requestLocation != null && noOfDays != 0) {
-			Timestamp timestamp = new Timestamp(systemTime);
-			startDate = simpleDateFormat.format(timestamp);
-			timestamp = new Timestamp(systemTime + noOfDays * 24 * 3600 * 1000 - noOfHours * 3600 * 1000);
-			endDate = simpleDateFormat.format(timestamp);
+		if(requestLocation != "") {
+			System.out.println(requestLocation);
+			if(noOfDays != 0) {
+				Timestamp timestamp = new Timestamp(systemTime);
+				startDate = simpleDateFormat.format(timestamp);
+				timestamp = new Timestamp(systemTime + noOfDays * 24 * 3600 * 1000 - noOfHours * 3600 * 1000);
+				endDate = simpleDateFormat.format(timestamp);	
+			}else {
+				Timestamp timestamp = new Timestamp(systemTime);
+				startDate = simpleDateFormat.format(timestamp);
+				timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
+				endDate = simpleDateFormat.format(timestamp);
+			}
 			
 			String geocode_api_request="https://maps.googleapis.com/maps/api/geocode/json?address="+requestLocation+"&key=AIzaSyAq9QsLNB4AcqvPmLgVhR22CIAznd2Y3uM";
             ResponseEntity<String> response = restTemplate.getForEntity(geocode_api_request, String.class);
@@ -124,10 +135,17 @@ public class HomeController {
             System.out.println(requestLatitude + " " + requestLongitude);
 		}
 		else {
-			Timestamp timestamp = new Timestamp(systemTime);
-			startDate = simpleDateFormat.format(timestamp);
-			timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
-			endDate = simpleDateFormat.format(timestamp);
+			if(noOfDays != 0) {
+				Timestamp timestamp = new Timestamp(systemTime);
+				startDate = simpleDateFormat.format(timestamp);
+				timestamp = new Timestamp(systemTime + noOfDays * 24 * 3600 * 1000 - noOfHours * 3600 * 1000);
+				endDate = simpleDateFormat.format(timestamp);
+			}else {
+				Timestamp timestamp = new Timestamp(systemTime);
+				startDate = simpleDateFormat.format(timestamp);
+				timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
+				endDate = simpleDateFormat.format(timestamp);
+			}
 			
 			requestLatitude = root.get(3).get("value").asText();
 			requestLongitude = root.get(4).get("value").asText();
@@ -172,12 +190,23 @@ public class HomeController {
 		
 		List<Event> feasibleEvents;
 
-		if (requestLocation != null && noOfDays != 0) {
-			System.out.println("planned");
-			feasibleEvents = generateFeasibleEvents(eventList, requestLocation, noOfHours, noOfDays);
+		if (requestLocation != "") {
+			if(noOfDays != 0) {
+				System.out.println("planned");
+				feasibleEvents = generateFeasibleEvents(eventList, requestLocation, noOfHours, noOfDays);
+			}else {
+				System.out.println("right now");
+				feasibleEvents = generateFeasibleEvents(eventList, requestLatitude, requestLongitude, noOfHours);
+			}
 		} else {
-			System.out.println("right now");
-			feasibleEvents = generateFeasibleEvents(eventList, requestLatitude, requestLongitude, noOfHours);
+			if(noOfDays != 0) {
+				System.out.println("planned");
+				feasibleEvents = generateFeasibleEvents(eventList, requestLatitude + ","
+						+ requestLongitude, noOfHours, noOfDays);
+			}else {
+				System.out.println("right now");
+				feasibleEvents = generateFeasibleEvents(eventList, requestLatitude, requestLongitude, noOfHours);
+			}	
 		}
 
 		String jsonInString = "";
@@ -211,7 +240,11 @@ public class HomeController {
 		ResponseEntity<String> response = restTemplate.getForEntity(requests, String.class);
 
 		JsonNode root = mapper.readTree(response.getBody());
-		JsonNode destinations = root.path("rows").get(0).path("elements"); // TODO Check null error
+		if(root.path("rows").size() == 0) {
+			System.out.println(Collections.emptyList());
+			return Collections.emptyList();
+		}
+		JsonNode destinations = root.path("rows").get(0).path("elements");
 
 		List<Event> feasibleEvents = new ArrayList<Event>();
 
