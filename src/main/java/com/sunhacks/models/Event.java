@@ -17,12 +17,14 @@ public class Event {
 	private String eventPlace;
 	private String eventLatitude, eventLongitude;
 	private String eventLink;
-	private int eventRating;
+	private int eventRating = 0;
 
 	private long eventStartTime;
+	private String eventStartTimeInString;
 	private int eventDuration;
 	
 	private long travellingTime;
+	private String travellingTimeInString;
 
 
 
@@ -131,6 +133,30 @@ public class Event {
 
 	public void setEventDuration(int eventDuration) {
 		this.eventDuration = eventDuration;
+	}
+
+
+
+	public String getEventStartTimeInString() {
+		return eventStartTimeInString;
+	}
+
+
+
+	public void setEventStartTimeInString(String eventStartTimeInString) {
+		this.eventStartTimeInString = eventStartTimeInString;
+	}
+
+
+
+	public String getTravellingTimeInString() {
+		return travellingTimeInString;
+	}
+
+
+
+	public void setTravellingTimeInString(String travellingTimeInString) {
+		this.travellingTimeInString = travellingTimeInString;
 	}
 	
 	

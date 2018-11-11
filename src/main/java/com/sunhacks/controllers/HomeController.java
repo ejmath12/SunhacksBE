@@ -29,24 +29,23 @@ import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class HomeController {
-	@Autowired
-	private EventRepository repository;
+    @Autowired
+    private EventRepository repository;
 
-	@RequestMapping(value = "/saveEvent", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-	public String index() {
+	@RequestMapping(value = "/saveEvent", method = RequestMethod.POST,
+			consumes = "application/json", produces = "application/json")
+	public String index(@RequestBody String request) throws IOException {
+		System.out.println(request);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode root = mapper.readTree(request);
 		Event e = new Event();
-		e.setEventName("Sunhacks");
-		e.setEventLink("Hacktathon");
-//        e.setEvent_strt_time(1232312);
+		e.setEventName(root.get("name").textValue());
 		repository.save(e);
-		StringBuilder sb = new StringBuilder("");
-		for (Event Event : repository.findAll()) {
-			sb.append(Event.toString());
-		}
-		return sb.toString();
-	}
+		return "{}";
+    }
 
-	@RequestMapping(value = "/historyEvents", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+	@RequestMapping(value = "/historyEvents", method = RequestMethod.POST,
+			consumes = "application/json", produces = "application/json")
 	public String getHistoryEvents() {
 		ObjectMapper mapper = new ObjectMapper();
 		List<Event> list = repository.findAll();
@@ -151,7 +150,7 @@ public class HomeController {
 			feasibleEvents = generateFeasibleEvents(eventList, requestLocation, noOfHours, noOfDays);
 		} else {
 			System.out.println("right now");
-			feasibleEvents = generateFeasibleEvents(eventList, "43.874668", "-81.484383", noOfHours);
+			feasibleEvents = generateFeasibleEvents(eventList, requestLatitude, requestLongitude, noOfHours);
 		}
 
 		String jsonInString = "";
@@ -195,12 +194,18 @@ public class HomeController {
 			long travelTime = Long.parseLong(objNode.path("duration").get("value").asText());
 			long timestamp = System.currentTimeMillis() / 1000;
 
-			System.out.println((travelTime + timestamp) + " " + eventList.get(i).getEventStartTime());
+			System.out.println((travelTime) + " " + eventList.get(i).getEventStartTime());
 
 			if ((timestamp + travelTime < eventList.get(i).getEventStartTime()) 
 					&& (eventList.get(i).getEventDuration() + 2 * eventList.get(i).getTravellingTime() < (noOfHours * 3600)) 
 					&& (eventList.get(i).getEventStartTime() + noOfHours * 3600 < timestamp + noOfDays * 24 * 3600)) {
 				eventList.get(i).setTravellingTime(travelTime);
+				
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				
+				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime());
+				eventList.get(i).setEventStartTimeInString(simpleDateFormat.format(timestamp2));
+				eventList.get(i).setTravellingTimeInString(objNode.path("duration").get("text").asText());
 				feasibleEvents.add(eventList.get(i));
 			}
 
@@ -243,14 +248,18 @@ public class HomeController {
 			long travelTime = Long.parseLong(objNode.path("duration").get("value").asText());
 			long timestamp = System.currentTimeMillis() / 1000;
 
-			System.out.println((travelTime + timestamp) + " " + eventList.get(i).getEventStartTime());
+			System.out.println((travelTime) + " " + eventList.get(i).getEventStartTime());
 			
-//			eventList.get(i).setTravellingTime(travelTime);
-//			feasibleEvents.add(eventList.get(i));
 
 			if ((timestamp + travelTime < eventList.get(i).getEventStartTime()) && (eventList.get(i).getEventDuration()
 					+ 2 * eventList.get(i).getTravellingTime()) < (noOfHours * 3600)) {
 				eventList.get(i).setTravellingTime(travelTime);
+				
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				
+				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime());
+				eventList.get(i).setEventStartTimeInString(simpleDateFormat.format(timestamp2));
+				eventList.get(i).setTravellingTimeInString(objNode.path("duration").get("text").asText());
 				feasibleEvents.add(eventList.get(i));
 			}
 
@@ -259,5 +268,5 @@ public class HomeController {
 
 //		return feasibleEvents.subList(0, Math.min(feasibleEvents.size(), 5));
 		return feasibleEvents;
-	}
+		}
 }
