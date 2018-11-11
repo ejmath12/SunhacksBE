@@ -8,7 +8,7 @@ public class Events {
 	@Id
 	private String name;
 	private String description, latitude, longitude, place;
-	private int travelling_time=0;
+	private int travelling_time=0, rating;
 	private String event_strt_time;
 	public String getName() {
 		return name;
@@ -49,6 +49,15 @@ public class Events {
 	public int getTravelling_time() {
 		return travelling_time;
 	}
+
+	public int getRating() {
+		return rating;
+	}
+
+	public void setRating(int rating) {
+		this.rating = rating;
+	}
+
 	public void setTravelling_time(int travelling_time) {
 		this.travelling_time = travelling_time;
 	}
@@ -63,6 +72,7 @@ public class Events {
 				", place='" + place + '\'' +
 				", event_strt_time=" + event_strt_time +
 				", travelling_time=" + travelling_time +
-				'}';
+				", rating=" + rating
+				+"'";
 	}
 }

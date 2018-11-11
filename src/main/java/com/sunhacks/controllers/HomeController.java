@@ -36,9 +36,39 @@ public class HomeController {
         }
         return sb.toString();
     }
-    
-  @RequestMapping(value = "/events")
-  public String getEvents() throws JsonProcessingException, IOException
+
+
+
+	@RequestMapping(value = "/historyevents")
+	public String getHistoryEvents() {
+		ObjectMapper mapper = new ObjectMapper();
+		List<Events> list = repository.findAll();
+		String jsonInString = "";
+		try {
+			jsonInString = mapper.writeValueAsString(list);
+		} catch (JsonProcessingException j) {
+			jsonInString = "";
+		}
+		return jsonInString;
+	}
+
+	@RequestMapping(value = "/saveRatings")
+	public boolean saveRatings() {
+		ObjectMapper mapper = new ObjectMapper();
+		String id = "Sunhacks";
+		Events event = repository.findOne(id);
+		event.setRating(5);
+		try {
+			repository.save(event);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+
+	@RequestMapping(value = "/events")
+  	public String getEvents() throws JsonProcessingException, IOException
   {
 	  	RestTemplate restTemplate = new RestTemplate();
     	ObjectMapper mapper = new ObjectMapper();
