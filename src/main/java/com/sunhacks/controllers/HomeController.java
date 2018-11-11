@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,8 +29,8 @@ public class HomeController {
     @Autowired
     private EventRepository repository;
 
-    @RequestMapping("/")
-    public String index() {
+	@RequestMapping(value = "/saveEvent", method = RequestMethod.POST,
+			consumes = "application/json", produces = "application/json")    public String index() {
         Events e = new Events();
         e.setName("Sunhacks");
         e.setDescription("Hacktathon");
@@ -42,7 +43,8 @@ public class HomeController {
         return sb.toString();
     }
 
-	@RequestMapping(value = "/historyevents")
+	@RequestMapping(value = "/historyEvents", method = RequestMethod.POST,
+			consumes = "application/json", produces = "application/json")
 	public String getHistoryEvents() {
 		ObjectMapper mapper = new ObjectMapper();
 		List<Events> list = repository.findAll();
@@ -69,8 +71,9 @@ public class HomeController {
 		}
 	}
 
-	@RequestMapping(value = "/events")
-  public List<Events> getEvents() throws JsonProcessingException, IOException, ParseException
+	@RequestMapping(value = "/getEvents", method = RequestMethod.POST,
+			consumes = "application/json", produces = "application/json")
+  public String getEvents() throws JsonProcessingException, IOException, ParseException
   {
 	  	RestTemplate restTemplate = new RestTemplate();
     	ObjectMapper mapper = new ObjectMapper();
@@ -117,7 +120,14 @@ public class HomeController {
     	}
 //        Quote quote = restTemplate.getForObject("http://gturnquist-quoters.cfapps.io/api/random", Quote.class);
     	
-    	return generate_feasiable_event(ret,"43.874668","-81.484383");
+    	List<Events> events =  generate_feasiable_event(ret,"43.874668","-81.484383");
+	  String jsonInString = "";
+	  try {
+		  jsonInString = mapper.writeValueAsString(events);
+	  } catch (JsonProcessingException j) {
+		  jsonInString = "";
+	  }
+	  return jsonInString;
   }
   
   public List<Events> generate_feasiable_event(List<Events> event_list, String origin_latitude, String origin_longitude) throws JsonProcessingException, IOException //,long user_strt_time
