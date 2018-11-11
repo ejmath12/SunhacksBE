@@ -3,7 +3,9 @@ package com.sunhacks.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.sunhacks.models.Event;
+import com.sunhacks.models.EventShort;
 import com.sunhacks.repository.EventRepository;
 
 import java.io.IOException;
@@ -63,16 +65,19 @@ public class HomeController {
 	public boolean saveRatings(@RequestBody String request) throws IOException {
 		System.out.println("Request" + request);
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode root = mapper.readTree(request);
-		Event e = new Event();
-		e.setEventName(root.get("name").textValue());
-		e.setEventRating(Integer.parseInt(root.get("rating").textValue()));
-		try {
-			repository.save(e);
-			return true;
-		} catch (Exception ex) {
-			return false;
+		List<EventShort> list2 = mapper.readValue(request,
+				TypeFactory.defaultInstance().constructCollectionType(List.class, EventShort.class));
+		for(EventShort e: list2) {
+			if(!(e.getEventRating() == null ||  e.getEventRating().equals(""))){
+				Event event = new Event();
+				event.setEventName(e.getEventName());
+				event.setEventRating(Integer.parseInt(e.getEventRating()));
+				repository.save(event);
+			}
+
 		}
+		return true;
+
 	}
 
 	@RequestMapping(value = "/getEvents", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")

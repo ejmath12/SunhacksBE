@@ -129,8 +129,9 @@
                                 <tr>
                                     <td>{this.props.employee.eventName}</td>
                                     <td>  <label>
-                                        <input type="text" className="events-ratings" value={this.props.employee.eventRating}/>
+                                        {this.props.employee.eventRating}
                                     </label></td>
+                                    <td><input type="number" name={this.props.employee.eventName} className="ratingsInput"/></td>
                                 </tr>);
                         }
                     });
@@ -148,8 +149,9 @@
                                                 <thead>
                                                 <tr>
                                                     <th>Event Name</th>
-                                                    <th>Rating</th>
-                                                    </tr>
+                                                    <th>Current Rating</th>
+                                                    <th>New Rating</th>
+                                                </tr>
                                                 </thead>
                                                 <tbody>{rows}</tbody>
                                             </table>
@@ -188,8 +190,10 @@
         function fire_ajax_submit3() {
             console.log("hi");
             var ratingsArray = $('.ratingsInput').map(function() {
-                return '"name":"'+this.name +',"rating":"' + this.value + '"';
-            }).get();
+                return '{"eventName":"'+this.name +'","eventRating":"' + this.value + '"}';
+            }).get().toString();
+            //ratingsArray = ratingsArray.substring(0, ratingsArray.length-1);
+            ratingsArray = '[' + ratingsArray + ']';
             console.log("Data" + ratingsArray)
             $("#btn-search").prop("disabled", true);
 
