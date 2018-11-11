@@ -3,7 +3,8 @@
     <script type="text/javascript" src="js/jquery-2.1.1.js"></script>
     <script type="text/javascript" src="bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/isometric/main.js"></script>
-    <script>
+
+    <script type="text/babel">
         $( document ).ready(function() {
             getLocation();
                 $("#btn-search").click(function(event) {
@@ -31,8 +32,44 @@
                 timeout: 600000,
                 success: function (data) {
 
-                    var json = "<h4>Ajax Response</h4><pre>"
-                        + JSON.stringify(data, null, 4) + "</pre>";
+                    var json = data;
+                    console.log(json);
+                    var EMPLOYEES = json;
+                    var Employee = React.createClass({
+                        render: function() {
+                            return (
+                                <tr>
+                                    <td>{this.props.employee.name}</td>
+                                    <td>{this.props.employee.description}</td>
+                                    <td>{this.props.employee.place}</td>
+                                    <td>{this.props.employee.event_strt_time}</td>
+                                </tr>);
+                        }
+                    });
+                    var EmployeeTable = React.createClass({
+                        render: function() {
+                            var rows = [];
+                            this.props.employees.map(function(employee) {
+                                rows.push(<Employee employee={employee} />);
+                            });
+                            return (
+                                <table className="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Event Name</th>
+                                        <th>Event Link</th>
+                                        <th>Place</th>
+                                        <th>Event StartTime</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>{rows}</tbody>
+                                </table>);
+                        }
+                    });
+
+                    ReactDOM.render(
+                        <EmployeeTable employees ={EMPLOYEES}/>, document.getElementById('root')
+                    );
                     $('#result').html(json);
 
                     console.log("SUCCESS : ", data);
@@ -147,8 +184,11 @@
 
         </div>
     </div>
-    <div id ="result"></div>
+    <div id='root'></div>
 
+    <script src="https://fb.me/react-15.0.1.js"></script>
+    <script src="https://fb.me/react-dom-15.0.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
 </div>
     <!--=== Load JS here for greater good ====-->
 
