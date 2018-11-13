@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.sunhacks.models.Constants;
 import com.sunhacks.models.Event;
 import com.sunhacks.models.EventShort;
 import com.sunhacks.repository.EventRepository;
@@ -16,15 +17,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,8 +32,12 @@ import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class HomeController {
-    @Autowired
-    private EventRepository repository;
+
+	@Autowired
+	Environment env;
+
+	@Autowired
+	private EventRepository repository;
 
 	@RequestMapping(value = "/saveEvent", method = RequestMethod.POST,
 			consumes = "application/json", produces = "application/json")
@@ -44,10 +46,10 @@ public class HomeController {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode root = mapper.readTree(request);
 		Event e = new Event();
-		e.setEventName(root.get("name").textValue());
+		e.setEventName(root.get(Constants.name).textValue());
 		repository.save(e);
 		return "{}";
-    }
+	}
 
 	@RequestMapping(value = "/historyEvents", method = RequestMethod.POST,
 			consumes = "application/json", produces = "application/json")
@@ -66,7 +68,7 @@ public class HomeController {
 	@RequestMapping(value = "/saveRatings", method = RequestMethod.POST,
 			consumes = "application/json", produces = "application/json")
 	public boolean saveRatings(@RequestBody String request) throws IOException {
-		System.out.println("Request" + request);
+		//System.out.println("Request" + request);
 		ObjectMapper mapper = new ObjectMapper();
 		List<EventShort> list2 = mapper.readValue(request,
 				TypeFactory.defaultInstance().constructCollectionType(List.class, EventShort.class));
@@ -85,32 +87,32 @@ public class HomeController {
 
 	@RequestMapping(value = "/getEvents", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
 	public String getEvents(@RequestBody String request) throws JsonProcessingException, IOException, ParseException {
-		
-		System.out.println("POST Request" + request);
-		
+
+		//System.out.println("POST Request" + request);
+
 //		boolean rightNow = true; // default should be false
 		String requestLocation = "Texas"; // default value is "default"
 		String requestLatitude = null;
 		String requestLongitude = null;
-		String searchRadius = "10";
+		String searchRadius = Constants.defaultSearchRadius;
 //		long requestDateTime = -1;
 		int noOfDays = 10; // default value is -1"43.874668","-81.484383"
 		int noOfHours = 0;
-		
+
 		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper mapper = new ObjectMapper();
-		
-		JsonNode root = mapper.readTree(request);
-		
-		requestLocation = root.get(0).get("value").asText();
-		noOfDays = root.get(1).get("value").asInt();
-		noOfHours = root.get(2).get("value").asInt();
 
-		
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		JsonNode root = mapper.readTree(request);
+
+		requestLocation = root.get(0).get(Constants.value).asText();
+		noOfDays = root.get(1).get(Constants.value).asInt();
+		noOfHours = root.get(2).get(Constants.value).asInt();
+
+
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(Constants.simpleDateFormat);
 		String startDate = null;
 		String endDate = null;
-		
+
 		long systemTime = System.currentTimeMillis();
 
 		if(requestLocation != "") {
@@ -119,20 +121,21 @@ public class HomeController {
 				Timestamp timestamp = new Timestamp(systemTime);
 				startDate = simpleDateFormat.format(timestamp);
 				timestamp = new Timestamp(systemTime + noOfDays * 24 * 3600 * 1000 - noOfHours * 3600 * 1000);
-				endDate = simpleDateFormat.format(timestamp);	
+				endDate = simpleDateFormat.format(timestamp);
 			}else {
 				Timestamp timestamp = new Timestamp(systemTime);
 				startDate = simpleDateFormat.format(timestamp);
 				timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
 				endDate = simpleDateFormat.format(timestamp);
 			}
-			
-			String geocode_api_request="https://maps.googleapis.com/maps/api/geocode/json?address="+requestLocation+"&key=AIzaSyAq9QsLNB4AcqvPmLgVhR22CIAznd2Y3uM";
-            ResponseEntity<String> response = restTemplate.getForEntity(geocode_api_request, String.class);
-            JsonNode geocode_root = mapper.readTree(response.getBody());
-            requestLatitude = geocode_root.path("results").get(0).path("geometry").path("location").get("lat").asText();
-            requestLongitude = geocode_root.path("results").get(0).path("geometry").path("location").get("lng").asText();
-            System.out.println(requestLatitude + " " + requestLongitude);
+
+			String geoCodeAPIRequest=env.getProperty("application.urls.geocode")+requestLocation+"&key="
+					+ env.getProperty("application.keys.geocode");
+			ResponseEntity<String> response = restTemplate.getForEntity(geoCodeAPIRequest, String.class);
+			JsonNode geocode_root = mapper.readTree(response.getBody());
+			requestLatitude = geocode_root.path(Constants.results).get(0).path(Constants.geometry).path(Constants.location).get("lat").asText();
+			requestLongitude = geocode_root.path(Constants.results).get(0).path(Constants.geometry).path(Constants.location).get("lng").asText();
+			System.out.println(requestLatitude + " " + requestLongitude);
 		}
 		else {
 			if(noOfDays != 0) {
@@ -146,39 +149,40 @@ public class HomeController {
 				timestamp = new Timestamp(systemTime + noOfHours * 3600 * 1000);
 				endDate = simpleDateFormat.format(timestamp);
 			}
-			
-			requestLatitude = root.get(3).get("value").asText();
-			requestLongitude = root.get(4).get("value").asText();
+
+			requestLatitude = root.get(3).get(Constants.value).asText();
+			requestLongitude = root.get(4).get(Constants.value).asText();
 		}
-		
-		String discoveryApi = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=" + requestLatitude + "," + requestLongitude + "&radius=" + searchRadius + "&startDateTime=" + startDate + "&endDateTime=" + endDate + "&apikey=MUoKA8DyO4d1TsiK8TDreOQG1tIOHbHD";
+		String discoveryApi = env.getProperty("application.urls.discovery") + requestLatitude + "," + requestLongitude + "&radius=" + searchRadius
+				+ "&startDateTime=" + startDate + "&endDateTime=" + endDate +
+				"&apikey=" + env.getProperty("application.keys.discovery");
 		System.out.println(discoveryApi);
 		ResponseEntity<String> response = restTemplate.getForEntity(discoveryApi, String.class);
 		root = mapper.readTree(response.getBody());
-		JsonNode name = root.path("_embedded").path("events");
+		JsonNode name = root.path(Constants.embedded).path(Constants.events);
 
 		List<Event> eventList = new ArrayList<>();
 
 		if (name.isArray()) {
 			for (final JsonNode objNode : name) {
 
-				if (objNode.path("dates").path("start").get("dateTime") == null) {
+				if (objNode.path(Constants.dates).path(Constants.start).get(Constants.dateTime) == null) {
 					System.out.println("dateTime null");
 					continue;
 				}
 
 				Event event = new Event();
 
-				event.setEventName(objNode.get("name").asText());
-				event.setEventPlace(objNode.path("_embedded").path("venues").get(0).get("name").asText());
+				event.setEventName(objNode.get(Constants.name).asText());
+				event.setEventPlace(objNode.path(Constants.embedded).path("venues").get(0).get(Constants.name).asText());
 				event.setEventLatitude(
-						objNode.path("_embedded").path("venues").get(0).path("location").get("latitude").asText());
+						objNode.path(Constants.embedded).path("venues").get(0).path(Constants.location).get("latitude").asText());
 				event.setEventLongitude(
-						objNode.path("_embedded").path("venues").get(0).path("location").get("longitude").asText());
+						objNode.path(Constants.embedded).path("venues").get(0).path(Constants.location).get("longitude").asText());
 				event.setEventLink(objNode.get("url").asText());
 
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-				Date dt = sdf.parse(objNode.path("dates").path("start").get("dateTime").asText());
+				SimpleDateFormat sdf = new SimpleDateFormat(Constants.simpleDateFormat);
+				Date dt = sdf.parse(objNode.path(Constants.dates).path(Constants.start).get(Constants.dateTime).asText());
 				long epoch = dt.getTime();
 				event.setEventStartTime(epoch / 1000);
 				event.setEventDuration((int) ((Math.random() * 240) + 180) * 60);
@@ -186,29 +190,10 @@ public class HomeController {
 				eventList.add(event);
 			}
 		}
-		
-		
+
+
 		List<Event> feasibleEvents;
-
-		if (requestLocation != "") {
-			if(noOfDays != 0) {
-				System.out.println("planned");
-				feasibleEvents = generateFeasibleEvents(eventList, requestLocation, noOfHours, noOfDays);
-			}else {
-				System.out.println("right now");
-				feasibleEvents = generateFeasibleEvents(eventList, requestLatitude, requestLongitude, noOfHours);
-			}
-		} else {
-			if(noOfDays != 0) {
-				System.out.println("planned");
-				feasibleEvents = generateFeasibleEvents(eventList, requestLatitude + ","
-						+ requestLongitude, noOfHours, noOfDays);
-			}else {
-				System.out.println("right now");
-				feasibleEvents = generateFeasibleEvents(eventList, requestLatitude, requestLongitude, noOfHours);
-			}	
-		}
-
+		feasibleEvents = generateFeasibleEvents(eventList, requestLocation==""?requestLatitude+","+requestLongitude:requestLocation, noOfHours, noOfDays);
 		String jsonInString = "";
 		try {
 			jsonInString = mapper.writeValueAsString(feasibleEvents);
@@ -219,10 +204,10 @@ public class HomeController {
 	}
 
 	private List<Event> generateFeasibleEvents(List<Event> eventList, String requestLocation, int noOfHours,
-			int noOfDays) throws JsonProcessingException, IOException {
-		
-		String requests = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + requestLocation;
-		
+											   int noOfDays) throws JsonProcessingException, IOException {
+
+		String requests = env.getProperty("application.urls.distance") + requestLocation;
+
 		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -233,7 +218,7 @@ public class HomeController {
 					+ Float.parseFloat(eventList.get(i).getEventLongitude()) + "|";
 		}
 		requests = requests.substring(0, requests.length() - 1);
-		requests += "&key=AIzaSyAq9QsLNB4AcqvPmLgVhR22CIAznd2Y3uM";
+		requests += "&key=" + env.getProperty("application.keys.geocode");
 
 		System.out.println(requests);
 
@@ -251,18 +236,18 @@ public class HomeController {
 		int i = 0;
 		for (final JsonNode objNode : destinations) {
 
-			long travelTime = Long.parseLong(objNode.path("duration").get("value").asText());
+			long travelTime = Long.parseLong(objNode.path("duration").get(Constants.value).asText());
 			long timestamp = System.currentTimeMillis() / 1000;
 
 			System.out.println((travelTime) + " " + eventList.get(i).getEventStartTime());
 
-			if ((timestamp + travelTime < eventList.get(i).getEventStartTime()) 
-					&& (eventList.get(i).getEventDuration() + 2 * eventList.get(i).getTravellingTime() < (noOfHours * 3600)) 
+			if ((timestamp + travelTime < eventList.get(i).getEventStartTime())
+					&& (eventList.get(i).getEventDuration() + 2 * eventList.get(i).getTravellingTime() < (noOfHours * 3600))
 					&& (eventList.get(i).getEventStartTime() + noOfHours * 3600 < timestamp + noOfDays * 24 * 3600)) {
 				eventList.get(i).setTravellingTime(travelTime);
-				
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				
+
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(Constants.simpleDateFormat2);
+
 				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime() * 1000);
 				eventList.get(i).setEventStartTimeInString(simpleDateFormat.format(timestamp2));
 				eventList.get(i).setTravellingTimeInString(objNode.path("duration").get("text").asText());
@@ -276,57 +261,4 @@ public class HomeController {
 		return feasibleEvents;
 	}
 
-	public List<Event> generateFeasibleEvents(List<Event> eventList, String requestLatitude, String requestLongitude,
-			int noOfHours) throws JsonProcessingException, IOException {
-
-		String requests = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + requestLatitude + ","
-				+ requestLongitude;
-		RestTemplate restTemplate = new RestTemplate();
-		ObjectMapper mapper = new ObjectMapper();
-
-		requests += "&destinations=";
-
-		for (int i = 0; i < eventList.size(); i++) {
-			requests += Float.parseFloat(eventList.get(i).getEventLatitude()) + ","
-					+ Float.parseFloat(eventList.get(i).getEventLongitude()) + "|";
-		}
-		requests = requests.substring(0, requests.length() - 1);
-		requests += "&key=AIzaSyAq9QsLNB4AcqvPmLgVhR22CIAznd2Y3uM";
-
-		System.out.println(requests);
-
-		ResponseEntity<String> response = restTemplate.getForEntity(requests, String.class);
-
-		JsonNode root = mapper.readTree(response.getBody());
-		JsonNode destinations = root.path("rows").get(0).path("elements");
-
-		List<Event> feasibleEvents = new ArrayList<Event>();
-
-		int i = 0;
-		for (final JsonNode objNode : destinations) {
-
-			long travelTime = Long.parseLong(objNode.path("duration").get("value").asText());
-			long timestamp = System.currentTimeMillis() / 1000;
-
-			System.out.println((travelTime) + " " + eventList.get(i).getEventStartTime());
-			
-
-			if ((timestamp + travelTime < eventList.get(i).getEventStartTime()) && (eventList.get(i).getEventDuration()
-					+ 2 * eventList.get(i).getTravellingTime()) < (noOfHours * 3600)) {
-				eventList.get(i).setTravellingTime(travelTime);
-				
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				
-				Timestamp timestamp2 = new Timestamp(eventList.get(i).getEventStartTime() * 1000);
-				eventList.get(i).setEventStartTimeInString(simpleDateFormat.format(timestamp2));
-				eventList.get(i).setTravellingTimeInString(objNode.path("duration").get("text").asText());
-				feasibleEvents.add(eventList.get(i));
-			}
-
-			i++;
-		}
-
-//		return feasibleEvents.subList(0, Math.min(feasibleEvents.size(), 5));
-		return feasibleEvents;
-		}
 }

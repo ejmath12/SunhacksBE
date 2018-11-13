@@ -42,9 +42,9 @@ public class MLTrainer {
             while(st.hasMoreTokens())
             {
                 int user = Integer.parseInt(st.nextToken());
-                int movie = Integer.parseInt(st.nextToken());
+                int event = Integer.parseInt(st.nextToken());
                 int rating = Integer.parseInt(st.nextToken());
-                matrix[user-1][movie-1] = rating;
+                matrix[user-1][event-1] = rating;
                 st.nextToken();
             }
         }
@@ -56,17 +56,17 @@ public class MLTrainer {
         int lenUsers = matrix.length;
         int lenMovies = matrix[0].length;
         int user = 0;
-        int movie = 0;
+        int event = 0;
         float[] opRating = new float[len];
         for (int i = 0; i < len; ++i)
         {
             user = test[i][0];
-            movie = test[i][1];
+            event = test[i][1];
             float upperNum = 0;
             float upperDenom = 0;
             for (int j = 0; j < lenUsers; ++j)
             {
-                if(matrix[j][movie-1] != -1)
+                if(matrix[j][event-1] != -1)
                 {
                     float num = 0;
                     float denom1 = 0;
@@ -85,7 +85,7 @@ public class MLTrainer {
                     if (flag)
                     {
                         upperDenom += num/(Math.sqrt(denom1*denom2));
-                        upperNum += matrix[j][movie-1]*num/(Math.sqrt(denom1*denom2));
+                        upperNum += matrix[j][event-1]*num/(Math.sqrt(denom1*denom2));
                     }
                 }
             }
