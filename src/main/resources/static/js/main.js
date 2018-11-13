@@ -1,4 +1,3 @@
-<script type="text/babel">
     $( document ).ready(function() {
         startpage();
 
@@ -382,5 +381,3 @@ function fire_ajax_submit() {
     });
 
 }
-
-</script>
