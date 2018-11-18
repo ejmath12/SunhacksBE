@@ -1,35 +1,39 @@
 package com.sunhacks;
 
+import com.sunhacks.repository.EventRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class MLTrainer {
-    /*Uncommnet when running the trainer*/
-//    public static void main(String args[])throws IOException {
-//        System.out.println("Recommendation System Ratings!!!");
-//        String UserItem = args[0];
-//        String SimPCJ = args[1];
-//        int[][] matrix = createMatrix();
-//        int[][] test = {{},{}}; //take from program arguments
-//        for(float f : cosineSimilarityUser(matrix, test)) {
-//
-//        }
-//
-//    }
+    public static void main(String args[])throws IOException {
+        System.out.println("Recommendation System Ratings!!!");
+        String UserItem = args[0];
+        String SimPCJ = args[1];
+        int[][] matrix = createMatrix();
+        int[][] test = {{},{}}; //take from program arguments
+        for(float f : cosineSimilarityUser(matrix, test)) {
+
+        }
+
+    }
+
+    @Autowired
+    private static EventRepository eventRepository;
 
     public static int[][] createMatrix()throws FileNotFoundException, IOException
     {
+
         // Initialize the matrix with -1 for all elements
         int[][] matrix = new int[6040][3952];
         for (int i = 0; i<matrix.length; ++i)
         {
-            for (int j = 0; j<matrix[0].length; ++j)
-            {
-                matrix[i][j] = -1;
-            }
+            Arrays.fill(matrix[i], -1);
         }
 
         // Read the input values and form the full matrix
@@ -64,10 +68,13 @@ public class MLTrainer {
             event = test[i][1];
             float upperNum = 0;
             float upperDenom = 0;
+            float n = 0;
             for (int j = 0; j < lenUsers; ++j)
             {
+
                 if(matrix[j][event-1] != -1)
                 {
+                    n++;
                     float num = 0;
                     float denom1 = 0;
                     float denom2 = 0;
@@ -94,7 +101,8 @@ public class MLTrainer {
 
             if (upperDenom > 0)
             {
-                predrating = upperNum/upperDenom;
+                //predrating = upperNum/upperDenom;
+                predrating = upperNum/n;
             }
             else
             {
@@ -104,4 +112,6 @@ public class MLTrainer {
         }
         return opRating;
     }
+
+
 }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.sunhacks.models.Constants;
 import com.sunhacks.models.Event;
 import com.sunhacks.models.EventShort;
+import com.sunhacks.models.Key;
 import com.sunhacks.repository.EventRepository;
 
 import ch.qos.logback.core.net.SyslogOutputStream;
@@ -46,7 +47,10 @@ public class HomeController {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode root = mapper.readTree(request);
 		Event e = new Event();
-		e.setEventName(root.get(Constants.name).textValue());
+		String userId = "abc123";
+		String eventName = root.get(Constants.name).textValue();
+		e.setId(new Key(userId, eventName));
+		e.setEventName(eventName);
 		repository.save(e);
 		return "{}";
 	}
@@ -75,6 +79,8 @@ public class HomeController {
 		for(EventShort e: list2) {
 			if(!(e.getEventRating() == null ||  e.getEventRating().equals(""))){
 				Event event = new Event();
+				String userId = "abc123";
+				event.setId(new Key(userId, e.getEventName()));
 				event.setEventName(e.getEventName());
 				event.setEventRating(Integer.parseInt(e.getEventRating()));
 				repository.save(event);
@@ -172,8 +178,10 @@ public class HomeController {
 				}
 
 				Event event = new Event();
-
-				event.setEventName(objNode.get(Constants.name).asText());
+				String userId = "abc123";
+				String eventName = objNode.get(Constants.name).asText();
+				event.setId(new Key(userId, eventName));
+				event.setEventName(eventName);
 				event.setEventPlace(objNode.path(Constants.embedded).path("venues").get(0).get(Constants.name).asText());
 				event.setEventLatitude(
 						objNode.path(Constants.embedded).path("venues").get(0).path(Constants.location).get("latitude").asText());

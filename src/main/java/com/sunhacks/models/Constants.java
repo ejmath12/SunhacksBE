@@ -14,5 +14,8 @@ public class Constants {
     public static String start = "start";
     public static String embedded = "_embedded";
     public static String simpleDateFormat2 = "yyyy-MM-dd HH:mm:ss";
+    public static String genres = "genres";
+    public static String id = "id";
+    public static String segment = "segment";
 
 }
