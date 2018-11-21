@@ -4,12 +4,11 @@ import com.sunhacks.models.User;
 import com.sunhacks.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController {}/*
 
     @Autowired
     private UserRepository applicationUserRepository;
@@ -30,4 +29,4 @@ public class UserController {
         return "signUp.html";
     }
 
-}
+}*/
