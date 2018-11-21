@@ -1,9 +1,12 @@
 package com.sunhacks.models;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "user")
 public class User {
+    @Id
     private String username;
 
     public String getUsername() {
@@ -14,13 +17,16 @@ public class User {
         this.username = username;
     }
 
-    public String getPassWord() {
-        return passWord;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPassWord(String passWord) {
-        this.passWord = passWord;
+    public void setPassWord(String password) {
+        this.password = password;
     }
 
-    private String passWord;
+    private String password;
+
+
+
 }
