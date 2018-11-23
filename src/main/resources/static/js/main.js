@@ -98,7 +98,7 @@ function fire_ajax_submit2() {
     $.ajax({
         type: "POST",
         contentType: "application/json",
-        url: "/historyEvents",
+        url: "events/historyEvents",
         data: {},
         dataType: 'json',
         cache: false,
@@ -191,7 +191,7 @@ function fire_ajax_submit3() {
     $.ajax({
         type: "POST",
         contentType: "application/json",
-        url: "/saveRatings",
+        url: "events/saveRatings",
         data: ratingsArray,
         dataType: 'json',
         cache: false,
@@ -224,7 +224,7 @@ function fire_ajax_submit1() {
     $.ajax({
         type: "POST",
         contentType: "application/json",
-        url: "/saveEvent",
+        url: "events/saveEvent",
         data: sendData,
         dataType: 'json',
         cache: false,
@@ -256,7 +256,7 @@ function fire_ajax_submit() {
     $.ajax({
         type: "POST",
         contentType: "application/json",
-        url: "/getEvents",
+        url: "events/getEvents",
         data: JSON.stringify(data),
         dataType: 'json',
         cache: false,
@@ -281,76 +281,52 @@ function fire_ajax_submit() {
                     </tr>);
                 }
             });
-            var EmployeeEmptyTable = React.createClass({
-                render: function() {
-                    var rows = [];
-                    this.props.employees.map(function(employee) {
-                        rows.push(<Employee employee={employee}/>);
-                    });
-                    return (
-                        <div className="container">
-                        <div className="row">
-                        <form>
-                        <table className="table table-striped">
-                        <thead>
-                        <tr>
-                        <th>Event Name</th>
-                    <th>Event Link</th>
-                    <th>Place</th>
-                    <th>Travel Time</th>
-                    <th>Event Start Time</th>
-                    <th>
-                    <label>
-                    <i className={"fa fa-fw icon icon--kohana fa-check" }></i>
-                        <span className="input__label-content input__label-content--kohana">Choose Me!</span>
-                    </label>
-                    </th>
-                    </tr>
-                    </thead>
-                    <tbody>{rows.length==0?"No events found":rows}</tbody>
-                    </table>
-                    </form>
-                    <a href="#" className="btn btn-info button" id="btn-save">Go!</a>
-                    </div>
-                    </div>
-
-                );
-                }
-            });
             var EmployeeTable = React.createClass({
                 render: function() {
                     var rows = [];
                     this.props.employees.map(function(employee) {
                         rows.push(<Employee employee={employee} />);
                     });
-                    return (
-                        <div className="container">
-                        <div className="row">
-                        <form>
-                        <table className="table table-striped">
-                        <thead>
-                        <tr>
-                        <th>Event Name</th>
-                    <th>Event Link</th>
-                    <th>Place</th>
-                    <th>Travel Time</th>
-                    <th>Event Start Time</th>
-                    <th>
-                    <label>
-                    <i className={"fa fa-fw icon icon--kohana fa-check" }></i>
-                        <span className="input__label-content input__label-content--kohana">Choose Me!</span>
-                    </label>
-                    </th>
-                    </tr>
-                    </thead>
-                    <tbody>{rows}</tbody>
-                    </table>
-                    </form>
-                    <a href="#" className="btn btn-info button" id="btn-save">Go!</a>
-                    </div>
-                    </div>
+                    if(rows.length>0) {
+                        return (
+                            <div className="container">
+                                <div className="row">
+                                    <form>
+                                        <table className="table table-striped">
+                                            <thead>
+                                            <tr>
+                                                <th>Event Name</th>
+                                                <th>Event Link</th>
+                                                <th>Place</th>
+                                                <th>Travel Time</th>
+                                                <th>Event Start Time</th>
+                                                <th>
+                                                    <label>
+                                                        <i className={"fa fa-fw icon icon--kohana fa-check"}></i>
+                                                        <span
+                                                            className="input__label-content input__label-content--kohana">Choose Me!</span>
+                                                    </label>
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>{rows}</tbody>
+                                        </table>
+                                    </form>
+                                    <a href="#" className="btn btn-info button" id="btn-save">Go!</a>
+                                </div>
+                            </div>
 
-                );
+                        );
+                    } else {
+                        return (
+                            <div className="container">
+                                <div className="row">
+                                    <h4>No Events Fo</h4>
+                                </div>
+                            </div>
+
+                        );
+                    }
                 }
             });
 

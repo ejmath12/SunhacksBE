@@ -1,6 +1,6 @@
 package com.sunhacks.service;
 
-/*
+
 import com.sunhacks.models.User;
 import com.sunhacks.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,5 +26,3 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(applicationUser.getUsername(), applicationUser.getPassword(), emptyList());
     }
 }
-*/
-public class UserDetailsServiceImpl {}

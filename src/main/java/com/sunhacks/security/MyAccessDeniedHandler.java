@@ -1,12 +1,16 @@
 package com.sunhacks.security;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-/*
+
 // handle 403 page
 @Component
 public class MyAccessDeniedHandler implements AccessDeniedHandler {
@@ -18,8 +22,7 @@ public class MyAccessDeniedHandler implements AccessDeniedHandler {
                        AccessDeniedException e) throws IOException, ServletException {
         Authentication auth
                 = SecurityContextHolder.getContext().getAuthentication();
-        httpServletResponse.sendRedirect(httpServletRequest.getContextPath() + "/home");
+        httpServletResponse.sendRedirect(httpServletRequest.getContextPath() + "/");
 
     }
-}*/
-public class MyAccessDeniedHandler {}
+}
