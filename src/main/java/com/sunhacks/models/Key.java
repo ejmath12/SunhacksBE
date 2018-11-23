@@ -16,8 +16,7 @@ public class Key implements Serializable {
     }
 
     @Field(order = 1)
-    private final @NotNull
-    String username;
+    private final @NotNull String username;
     @Field(order = 2)
     private final @NotNull String eventName;
     public Key(@NotNull String username, @NotNull String eventName) {

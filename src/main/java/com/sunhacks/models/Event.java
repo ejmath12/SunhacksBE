@@ -19,20 +19,37 @@ import javax.validation.constraints.NotNull;
 public class Event {
 	@Id
 	private Key id;
+	private String username;
 	private String eventName;
 	private String eventPlace;
 	private String eventLatitude, eventLongitude;
 	private String eventLink;
 	private int eventRating = 0;
-	private Category category = Category.NULL;
+	private boolean isRated = false;
 
-			;
 	private long eventStartTime;
+
+	public boolean isRated() {
+		return isRated;
+	}
+
+	public void setRated(boolean rated) {
+		isRated = rated;
+	}
+
 	private String eventStartTimeInString;
 	private int eventDuration;
 
 	private long travellingTime;
 	private String travellingTimeInString;
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
 	public Key getId() {
 		return id;
@@ -50,13 +67,6 @@ public class Event {
 		this.id = id;
 	}
 
-	public Category getCategory() {
-		return category;
-	}
-
-	public void setCategory(Category category) {
-		this.category = category;
-	}
 
 
 	public String getEventPlace() {
@@ -182,7 +192,3 @@ public class Event {
 
 }
 
-enum Category
-{
-	NULL, ARTSNTHEATRE, SPORTS, MUSIC, FILM, ;
-}

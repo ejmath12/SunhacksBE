@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.sunhacks.models.Constants;
-import com.sunhacks.models.Event;
-import com.sunhacks.models.EventShort;
-import com.sunhacks.models.Key;
+import com.sunhacks.models.*;
 import com.sunhacks.repository.EventRepository;
 
 import ch.qos.logback.core.net.SyslogOutputStream;
@@ -25,6 +22,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -48,9 +46,10 @@ public class HomeController {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode root = mapper.readTree(request);
 		Event e = new Event();
-		String userId = "abc123";
 		String eventName = root.get(Constants.name).textValue();
-		e.setId(new Key(userId, eventName));
+		String u = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+		e.setUsername(u);
+		e.setId(new Key(u, eventName));
 		e.setEventName(eventName);
 		repository.save(e);
 		return "{}";
@@ -60,7 +59,8 @@ public class HomeController {
 			consumes = "application/json", produces = "application/json")
 	public String getHistoryEvents() {
 		ObjectMapper mapper = new ObjectMapper();
-		List<Event> list = repository.findAll();
+		String u = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+		List<Event> list = repository.findAllByUsername(u);
 		String jsonInString = "";
 		try {
 			jsonInString = mapper.writeValueAsString(list);
@@ -80,8 +80,10 @@ public class HomeController {
 		for(EventShort e: list2) {
 			if(!(e.getEventRating() == null ||  e.getEventRating().equals(""))){
 				Event event = new Event();
-				String userId = "abc123";
-				event.setId(new Key(userId, e.getEventName()));
+				String u = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+				event.setUsername(u);
+				event.setRated(true);
+				event.setId(new Key(u, e.getEventName()));
 				event.setEventName(e.getEventName());
 				event.setEventRating(Integer.parseInt(e.getEventRating()));
 				repository.save(event);
