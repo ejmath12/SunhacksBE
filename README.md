@@ -15,7 +15,7 @@ JWT based Authenthication build upon Spring Security
 
 # Recommendation basis
 There are two ideas based on which we are recommending the events. 
-1. Whether the event is feasible by checking the time slot user entered with the event time and travel time.
+1. Whether the event is feasible by checking the time slot which user entered with the event time plus travel time.
 2. Using cosine similarity to predict weigted ratings for events.
 
 # How to Run ?
