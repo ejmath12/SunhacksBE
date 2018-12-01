@@ -87,7 +87,7 @@ public class MLTrainer implements CommandLineRunner {
         List<Prediction> predictions = new ArrayList<>();
         int len = test.size();
         int lenUsers = matrix.length;
-        int lenMovies = matrix[0].length;
+        int lenEvents = matrix[0].length;
         int user = 0;
         int event = 0;
         float[] opRating = new float[len];
@@ -109,7 +109,7 @@ public class MLTrainer implements CommandLineRunner {
                     float denom1 = 0;
                     float denom2 = 0;
                     boolean flag = false;
-                    for (int k = 0; k < lenMovies; ++k)
+                    for (int k = 0; k < lenEvents; ++k)
                     {
                         if ((matrix[user-1][k] != -1) && (matrix[j][k] != -1))
                         {
